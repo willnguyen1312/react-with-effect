@@ -5,26 +5,21 @@ const fetchShippingCost = (
   callBack: (value: number) => void
 ) => {
   const controller = new AbortController();
-
   fetch(`https://jsonplaceholder.typicode.com/photos/${weight}`, {
     signal: controller.signal,
   })
     .then((response) => response.json())
-    .then((data) => {
-      callBack(data.id);
-    })
+    .then((data) => callBack(data.id))
     .catch(() => {
       // Ignore errors for now since it's just a cancelation 😄
     });
-
-  return () => {
-    controller.abort("Operation was aborted by the user");
-  };
+  return () => controller.abort("Operation was aborted by the user");
 };
 
 type State = {
   weight: number;
   shippingCost: number;
+  loadShippingCost?: boolean;
   effect?: any;
 };
 
@@ -46,6 +41,7 @@ export default function App() {
         return {
           ...state,
           weight: action.weight,
+          loadShippingCost: true,
           effect: () => {
             let cancelFunction: () => void = () => {};
 
@@ -74,6 +70,7 @@ export default function App() {
         return {
           ...state,
           shippingCost: action.shippingCost,
+          loadShippingCost: false,
         };
       }
 
@@ -110,6 +107,7 @@ export default function App() {
       />
 
       <p>Shipping cost: {currentState.shippingCost} 💵</p>
+      {currentState.loadShippingCost && <p>Loading shipping cost...</p>}
     </main>
   );
 }
