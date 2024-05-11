@@ -35,7 +35,11 @@ type Action =
       shippingCost: number;
     };
 
-const reducer = (state: State, action: Action, dispatch: Function): State => {
+const reducer = (
+  state: State,
+  action: Action,
+  dispatch: ReturnType<typeof createStore>["dispatch"]
+): State => {
   if (action.type === "setWeight") {
     return {
       ...state,
