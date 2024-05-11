@@ -1,10 +1,25 @@
 import React from "react";
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const fetchShippingCost = (
+  weight: number,
+  callBack: (value: number) => void
+) => {
+  const controller = new AbortController();
 
-const fetchShippingCost = async (weight: number) => {
-  await wait(1000);
-  return weight * 0.5;
+  fetch(`https://jsonplaceholder.typicode.com/photos/${weight}`, {
+    signal: controller.signal,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      callBack(data.id);
+    })
+    .catch(() => {
+      // Ignore errors for now since it's just a cancelation 😄
+    });
+
+  return () => {
+    controller.abort("Operation was aborted by the user");
+  };
 };
 
 type State = {
@@ -17,6 +32,7 @@ type Action =
   | {
       type: "setWeight";
       weight: number;
+      debouncedTime?: number;
     }
   | {
       type: "setShippingCost";
@@ -31,21 +47,30 @@ export default function App() {
           ...state,
           weight: action.weight,
           effect: () => {
-            async function fetchNewShippingCost(weight: number) {
-              const shippingCost = await fetchShippingCost(weight);
+            let cancelFunction: () => void = () => {};
 
-              dispatch({
-                type: "setShippingCost",
-                shippingCost,
-              });
-            }
+            const id = setTimeout(() => {
+              cancelFunction = fetchShippingCost(
+                action.weight,
+                (shippingCost) => {
+                  dispatch({
+                    type: "setShippingCost",
+                    shippingCost,
+                  });
+                }
+              );
+            }, action.debouncedTime);
 
-            fetchNewShippingCost(action.weight);
+            return () => {
+              cancelFunction();
+              clearTimeout(id);
+            };
           },
         };
       }
 
       if (action.type === "setShippingCost") {
+        console.log({ state });
         return {
           ...state,
           shippingCost: action.shippingCost,
@@ -76,7 +101,11 @@ export default function App() {
         type="number"
         value={currentState.weight}
         onChange={(e) =>
-          dispatch({ type: "setWeight", weight: Number(e.target.value) })
+          dispatch({
+            type: "setWeight",
+            weight: Number(e.target.value),
+            debouncedTime: 500,
+          })
         }
       />
 
