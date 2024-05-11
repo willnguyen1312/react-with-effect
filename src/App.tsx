@@ -21,7 +21,7 @@ type State = {
   weight: number;
   shippingCost: number;
   loadShippingCost?: boolean;
-  effect?: () => () => any;
+  shippingEffect?: () => () => any;
 };
 
 type Action =
@@ -41,7 +41,7 @@ const reducer = (state: State, action: Action, dispatch: Function): State => {
       ...state,
       weight: action.weight,
       loadShippingCost: true,
-      effect: () => {
+      shippingEffect: () => {
         let cancelFunction: () => void = () => {};
 
         const id = setTimeout(() => {
@@ -128,9 +128,9 @@ export default function App() {
   );
 
   React.useEffect(() => {
-    if (currentState.effect) {
-      const effect = currentState.effect;
-      delete currentState.effect; // Mark as completed
+    if (currentState.shippingEffect) {
+      const effect = currentState.shippingEffect;
+      delete currentState.shippingEffect; // Mark as completed
       return effect();
     }
   }, [currentState]);
