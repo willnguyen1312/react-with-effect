@@ -66,7 +66,6 @@ export default function App() {
       }
 
       if (action.type === "setShippingCost") {
-        console.log({ state });
         return {
           ...state,
           shippingCost: action.shippingCost,
