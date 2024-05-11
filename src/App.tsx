@@ -1,4 +1,5 @@
 import React from "react";
+import { createDevtools } from "./devtools";
 
 const fetchShippingCost = (
   weight: number,
@@ -11,7 +12,7 @@ const fetchShippingCost = (
     .then((response) => response.json())
     .then((data) => callBack(data.id))
     .catch(() => {
-      // Ignore errors for now since it's just a cancelation 😄
+      // Ignore errors for now since it's just a intentional request cancelation 😄
     });
   return () => controller.abort("Operation was aborted by the user");
 };
@@ -20,7 +21,7 @@ type State = {
   weight: number;
   shippingCost: number;
   loadShippingCost?: boolean;
-  effect?: any;
+  effect?: () => () => any;
 };
 
 type Action =
@@ -34,51 +35,96 @@ type Action =
       shippingCost: number;
     };
 
-export default function App() {
-  const [currentState, dispatch] = React.useReducer(
-    (state: State, action: Action): State => {
-      if (action.type === "setWeight") {
-        return {
-          ...state,
-          weight: action.weight,
-          loadShippingCost: true,
-          effect: () => {
-            let cancelFunction: () => void = () => {};
+const reducer = (state: State, action: Action, dispatch: Function): State => {
+  if (action.type === "setWeight") {
+    return {
+      ...state,
+      weight: action.weight,
+      loadShippingCost: true,
+      effect: () => {
+        let cancelFunction: () => void = () => {};
 
-            const id = setTimeout(() => {
-              cancelFunction = fetchShippingCost(
-                action.weight,
-                (shippingCost) => {
-                  dispatch({
-                    type: "setShippingCost",
-                    shippingCost,
-                  });
-                }
-              );
-            }, action.debouncedTime);
+        const id = setTimeout(() => {
+          cancelFunction = fetchShippingCost(action.weight, (shippingCost) => {
+            dispatch({
+              type: "setShippingCost",
+              shippingCost,
+            });
+          });
+        }, action.debouncedTime);
 
-            return () => {
-              cancelFunction();
-              clearTimeout(id);
-            };
-          },
+        return () => {
+          cancelFunction();
+          clearTimeout(id);
         };
-      }
+      },
+    };
+  }
 
-      if (action.type === "setShippingCost") {
-        return {
-          ...state,
-          shippingCost: action.shippingCost,
-          loadShippingCost: false,
-        };
-      }
+  if (action.type === "setShippingCost") {
+    return {
+      ...state,
+      shippingCost: action.shippingCost,
+      loadShippingCost: false,
+    };
+  }
 
-      return state;
+  return state;
+};
+
+type Subscriber = () => void;
+const createStore = () => {
+  let state: State = {
+    weight: 0,
+    shippingCost: 0,
+    loadShippingCost: false,
+  };
+  const listeners: Set<Subscriber> = new Set();
+
+  const getState = () => state;
+
+  const setState = (newState: Partial<State>) => {
+    state = { ...state, ...newState };
+    listeners.forEach((listener) => listener());
+  };
+
+  let devtools: ReturnType<typeof createDevtools>;
+
+  const dispatch = (action: Action) => {
+    state = reducer(state, action, dispatch);
+    devtools?.dispatch(action);
+    listeners.forEach((listener) => listener());
+  };
+
+  devtools = createDevtools({
+    getState,
+    setState,
+    dispatch,
+  });
+
+  return {
+    dispatch,
+    getState,
+    setState,
+    subscribe: (subscriber: Subscriber) => {
+      listeners.add(subscriber);
+      return () => {
+        listeners.delete(subscriber);
+      };
     },
-    {
-      weight: 0,
-      shippingCost: 0,
-    }
+  };
+};
+
+export default function App() {
+  const storeRef = React.useRef<ReturnType<typeof createStore>>();
+
+  if (!storeRef.current) {
+    storeRef.current = createStore();
+  }
+
+  const currentState = React.useSyncExternalStore(
+    storeRef.current.subscribe,
+    storeRef.current.getState
   );
 
   React.useEffect(() => {
@@ -97,7 +143,7 @@ export default function App() {
         type="number"
         value={currentState.weight}
         onChange={(e) =>
-          dispatch({
+          storeRef.current?.dispatch({
             type: "setWeight",
             weight: Number(e.target.value),
             debouncedTime: 500,
