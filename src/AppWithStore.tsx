@@ -152,7 +152,7 @@ const createStore = () => {
   };
 };
 
-export default function App() {
+export function AppWithStore() {
   const storeRef = React.useRef<ReturnType<typeof createStore>>();
 
   if (!storeRef.current) {
@@ -171,8 +171,9 @@ export default function App() {
   }, [currentState.shippingEffect]);
 
   return (
-    <main>
-      <h1>Please enter weight and I will give ya a shipping cost 😊</h1>
+    <>
+      <h1>App built with useSyncExternalStore and useEffect 🤘</h1>
+      <h2>Please enter weight and I will give ya a shipping cost 😊</h2>
 
       <label htmlFor="message">
         Message:{" "}
@@ -206,6 +207,6 @@ export default function App() {
 
       <p>Shipping cost: {currentState.shippingCost} 💵</p>
       {currentState.loadShippingCost && <p>Loading shipping cost...</p>}
-    </main>
+    </>
   );
 }
