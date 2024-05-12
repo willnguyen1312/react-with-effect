@@ -1,4 +1,4 @@
-import React from "react";
+import { useSyncExternalStore, useEffect, useRef } from "react";
 import { createDevtools } from "./devtools";
 import { fetchShippingCost } from "./api";
 
@@ -33,10 +33,10 @@ const createShippingEffect =
     debouncedTime = 0
   ) =>
   () => {
-    let cancelFunction: () => void = () => {};
+    let cancelFetchShippingCost: () => void = () => {};
 
     const id = setTimeout(() => {
-      cancelFunction = fetchShippingCost(weight, (shippingCost) => {
+      cancelFetchShippingCost = fetchShippingCost(weight, (shippingCost) => {
         dispatch({
           type: "setShippingCost",
           shippingCost,
@@ -45,7 +45,7 @@ const createShippingEffect =
     }, debouncedTime);
 
     return () => {
-      cancelFunction();
+      cancelFetchShippingCost();
       clearTimeout(id);
     };
   };
@@ -138,18 +138,18 @@ const createStore = () => {
 };
 
 export function AppWithStore() {
-  const storeRef = React.useRef<ReturnType<typeof createStore>>();
+  const storeRef = useRef<ReturnType<typeof createStore>>();
 
   if (!storeRef.current) {
     storeRef.current = createStore();
   }
 
-  const currentState = React.useSyncExternalStore(
+  const currentState = useSyncExternalStore(
     storeRef.current.subscribe,
     storeRef.current.getState
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentState.shippingEffect) {
       return currentState.shippingEffect();
     }
@@ -157,7 +157,7 @@ export function AppWithStore() {
 
   return (
     <>
-      <h1>App built with useSyncExternalStore and useEffect 🤘</h1>
+      <h1>App built with useSyncExternalStore, useRef and useEffect 🤘</h1>
       <h2>Please enter weight and I will give ya a shipping cost 😊</h2>
 
       <label htmlFor="message">

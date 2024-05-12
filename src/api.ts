@@ -1,6 +1,6 @@
 export const fetchShippingCost = (
   weight: number,
-  callBack: (value: number) => void
+  callBack: (value: number) => void,
 ) => {
   const controller = new AbortController();
   fetch(`https://jsonplaceholder.typicode.com/photos/${weight}`, {

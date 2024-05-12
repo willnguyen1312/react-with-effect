@@ -1,4 +1,4 @@
-import React from "react";
+import { useReducer, useEffect, Dispatch } from "react";
 import { fetchShippingCost } from "./api";
 
 type State = {
@@ -25,39 +25,41 @@ type Action =
       shippingCost: number;
     };
 
-const createShippingEffect =
-  (dispatch: React.Dispatch<Action>, weight: number, debouncedTime = 0) =>
-  () => {
-    let cancelFunction: () => void = () => {};
+const runShippingEffect = (
+  dispatch: Dispatch<Action>,
+  weight: number,
+  debouncedTime = 0
+) => {
+  let cancelFetchShippingCost: () => void = () => {};
 
-    const id = setTimeout(() => {
-      cancelFunction = fetchShippingCost(weight, (shippingCost) => {
-        dispatch({
-          type: "setShippingCost",
-          shippingCost,
-        });
+  const id = setTimeout(() => {
+    cancelFetchShippingCost = fetchShippingCost(weight, (shippingCost) => {
+      dispatch({
+        type: "setShippingCost",
+        shippingCost,
       });
-    }, debouncedTime);
+    });
+  }, debouncedTime);
 
-    return () => {
-      cancelFunction();
-      clearTimeout(id);
-    };
+  return () => {
+    cancelFetchShippingCost();
+    clearTimeout(id);
   };
+};
 
 export function AppWithoutStore() {
-  const [currentState, dispatch] = React.useReducer(
+  const [currentState, dispatch] = useReducer(
     (state: State, action: Action): State => {
       if (action.type === "setWeight") {
         return {
           ...state,
           weight: action.weight,
           loadShippingCost: true,
-          shippingEffect: createShippingEffect(
-            dispatch,
-            action.weight,
-            action.debouncedTime
-          ),
+          shippingEffect: () =>
+            // Due to how closure works in JavaScript, we need have to pass the dispatch function into the runShippingEffect function
+            // instead of createShippingEffect(dispatch, action.weight, action.debouncedTime) like the another example
+            // At this point, the inner function has access to the dispatch function returned by useReducer 🤘
+            runShippingEffect(dispatch, action.weight, action.debouncedTime),
         };
       }
 
@@ -75,11 +77,8 @@ export function AppWithoutStore() {
           ...state,
           message: action.message,
           loadShippingCost: true,
-          shippingEffect: createShippingEffect(
-            dispatch,
-            state.weight,
-            action.debouncedTime
-          ),
+          shippingEffect: () =>
+            runShippingEffect(dispatch, state.weight, action.debouncedTime),
         };
       }
 
@@ -93,7 +92,7 @@ export function AppWithoutStore() {
     }
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentState.shippingEffect) {
       return currentState.shippingEffect();
     }
