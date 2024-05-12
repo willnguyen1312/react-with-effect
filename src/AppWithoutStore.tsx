@@ -1,21 +1,5 @@
 import React from "react";
-import { createDevtools } from "./devtools";
-
-const fetchShippingCost = (
-  weight: number,
-  callBack: (value: number) => void
-) => {
-  const controller = new AbortController();
-  fetch(`https://jsonplaceholder.typicode.com/photos/${weight}`, {
-    signal: controller.signal,
-  })
-    .then((response) => response.json())
-    .then((data) => callBack(data.id))
-    .catch(() => {
-      // Ignore errors for now since it's just a intentional request cancelation 😄
-    });
-  return () => controller.abort("Operation was aborted by the user");
-};
+import { fetchShippingCost } from "./api";
 
 type State = {
   message: string;
@@ -42,11 +26,7 @@ type Action =
     };
 
 const createShippingEffect =
-  (
-    dispatch: ReturnType<typeof createStore>["dispatch"],
-    weight: number,
-    debouncedTime = 0
-  ) =>
+  (dispatch: React.Dispatch<Action>, weight: number, debouncedTime = 0) =>
   () => {
     let cancelFunction: () => void = () => {};
 
@@ -65,103 +45,52 @@ const createShippingEffect =
     };
   };
 
-const reducer = (
-  state: State,
-  action: Action,
-  dispatch: ReturnType<typeof createStore>["dispatch"]
-): State => {
-  if (action.type === "setWeight") {
-    return {
-      ...state,
-      weight: action.weight,
-      loadShippingCost: true,
-      shippingEffect: createShippingEffect(
-        dispatch,
-        action.weight,
-        action.debouncedTime
-      ),
-    };
-  }
-
-  if (action.type === "setShippingCost") {
-    return {
-      ...state,
-      shippingCost: action.shippingCost,
-      loadShippingCost: false,
-      shippingEffect: undefined,
-    };
-  }
-
-  if (action.type === "setMessage") {
-    return {
-      ...state,
-      message: action.message,
-      loadShippingCost: true,
-      shippingEffect: createShippingEffect(
-        dispatch,
-        state.weight,
-        action.debouncedTime
-      ),
-    };
-  }
-
-  return state;
-};
-
-type Subscriber = () => void;
-const createStore = () => {
-  let state: State = {
-    message: "",
-    weight: 0,
-    shippingCost: 0,
-    loadShippingCost: false,
-  };
-  const listeners: Set<Subscriber> = new Set();
-
-  const getState = () => state;
-
-  const setState = (newState: Partial<State>) => {
-    state = { ...state, ...newState };
-    listeners.forEach((listener) => listener());
-  };
-
-  let devtools: ReturnType<typeof createDevtools>;
-
-  const dispatch = (action: Action) => {
-    state = reducer(state, action, dispatch);
-    devtools?.dispatch(action);
-    listeners.forEach((listener) => listener());
-  };
-
-  devtools = createDevtools({
-    getState,
-    setState,
-    dispatch,
-  });
-
-  return {
-    dispatch,
-    getState,
-    setState,
-    subscribe: (subscriber: Subscriber) => {
-      listeners.add(subscriber);
-      return () => {
-        listeners.delete(subscriber);
-      };
-    },
-  };
-};
-
 export function AppWithoutStore() {
-  const storeRef = React.useRef<ReturnType<typeof createStore>>();
+  const [currentState, dispatch] = React.useReducer(
+    (state: State, action: Action): State => {
+      if (action.type === "setWeight") {
+        return {
+          ...state,
+          weight: action.weight,
+          loadShippingCost: true,
+          shippingEffect: createShippingEffect(
+            dispatch,
+            action.weight,
+            action.debouncedTime
+          ),
+        };
+      }
 
-  if (!storeRef.current) {
-    storeRef.current = createStore();
-  }
+      if (action.type === "setShippingCost") {
+        return {
+          ...state,
+          shippingCost: action.shippingCost,
+          loadShippingCost: false,
+          shippingEffect: undefined,
+        };
+      }
 
-  const currentState = React.useSyncExternalStore(
-    storeRef.current.subscribe,
-    storeRef.current.getState
+      if (action.type === "setMessage") {
+        return {
+          ...state,
+          message: action.message,
+          loadShippingCost: true,
+          shippingEffect: createShippingEffect(
+            dispatch,
+            state.weight,
+            action.debouncedTime
+          ),
+        };
+      }
+
+      return state;
+    },
+    {
+      message: "",
+      weight: 0,
+      shippingCost: 0,
+      loadShippingCost: false,
+    }
   );
 
   React.useEffect(() => {
@@ -181,7 +110,7 @@ export function AppWithoutStore() {
           type="text"
           value={currentState.message}
           onChange={(e) =>
-            storeRef.current?.dispatch({
+            dispatch({
               type: "setMessage",
               message: e.target.value,
               debouncedTime: 5000,
@@ -196,7 +125,7 @@ export function AppWithoutStore() {
           type="number"
           value={currentState.weight}
           onChange={(e) =>
-            storeRef.current?.dispatch({
+            dispatch({
               type: "setWeight",
               weight: Number(e.target.value),
               debouncedTime: 2000,
