@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { AppWithStore } from "./AppWithStore";
 import { AppWithoutStore } from "./AppWithoutStore";
+import "./index.css";
 
 const Layout = () => (
   <main>
@@ -44,5 +45,5 @@ if (import.meta.hot) {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>,
+  </React.StrictMode>
 );
