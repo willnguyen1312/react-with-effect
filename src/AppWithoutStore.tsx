@@ -28,7 +28,7 @@ type Action =
 const runShippingEffect = (
   dispatch: Dispatch<Action>,
   weight: number,
-  debouncedTime = 0
+  debouncedTime = 0,
 ) => {
   let cancelFetchShippingCost: () => void = () => {};
 
@@ -89,7 +89,7 @@ export function AppWithoutStore() {
       weight: 0,
       shippingCost: 0,
       loadShippingCost: false,
-    }
+    },
   );
 
   useEffect(() => {
