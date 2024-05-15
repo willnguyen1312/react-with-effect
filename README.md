@@ -1,4 +1,4 @@
-# React + Effect in style 🚀
+# Reducer + Effect in style 🚀
 
 ## The implementation is heavily inspired by the following work from some React experts and core team:
 
