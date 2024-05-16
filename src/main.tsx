@@ -9,11 +9,15 @@ import {
 import { AppWithStore } from "./AppWithStore";
 import { AppWithoutStore } from "./AppWithoutStore";
 import "./index.css";
+import { AppWithRedux } from "./AppWithRedux";
 
 const Layout = () => (
   <main>
     <nav>
       <ul>
+        <li>
+          <Link to="/app-with-redux">App with redux</Link>
+        </li>
         <li>
           <Link to="/app-with-store">App with store</Link>
         </li>
@@ -32,6 +36,7 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <AppWithStore /> },
+      { path: "app-with-redux", element: <AppWithRedux /> },
       { path: "app-with-store", element: <AppWithStore /> },
       { path: "app-without-store", element: <AppWithoutStore /> },
     ],
