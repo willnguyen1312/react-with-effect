@@ -11,15 +11,25 @@ const updateStateAndFetchNewShippingCost = createAsyncThunk(
   async (action: any, { signal, dispatch, getState }) => {
     dispatch(action);
 
-    const { weight } = getState() as State;
-    const result = await fetch(
-      `https://jsonplaceholder.typicode.com/photos/${weight}`,
-      {
-        signal,
-      }
-    ).then((response) => response.json());
+    let id: number | undefined;
 
-    return result.id as number;
+    signal.addEventListener("abort", () => {
+      clearTimeout(id);
+    });
+
+    return await new Promise((resolve) => {
+      id = setTimeout(async () => {
+        const { weight } = getState() as State;
+        fetch(`https://jsonplaceholder.typicode.com/photos/${weight}`, {
+          signal,
+        })
+          .then((response) => response.json())
+          .then((data) => resolve(data.id as any))
+          .catch(() => {
+            // Ignore errors for now since it's just a intentional request cancelation 😄
+          });
+      }, action.payload.debouncedTime);
+    });
   }
 ) as any;
 
@@ -80,8 +90,7 @@ const useDispatchWithAutoPromiseAbort = () => {
 
   useEffect(() => {
     return () => {
-      console.log("Aborting promise");
-      promise?.abort();
+      promise?.abort("Bye bye 👋");
     };
   }, [promise]);
 
@@ -108,7 +117,7 @@ function App() {
           onChange={(e) => {
             dispatch(
               updateStateAndFetchNewShippingCost(
-                setMessage({ message: e.target.value })
+                setMessage({ message: e.target.value, debouncedTime: 5000 })
               )
             );
           }}
@@ -122,7 +131,10 @@ function App() {
           onChange={(e) => {
             dispatch(
               updateStateAndFetchNewShippingCost(
-                setWeight({ weight: Number(e.target.value) })
+                setWeight({
+                  weight: Number(e.target.value),
+                  debouncedTime: 2000,
+                })
               )
             );
           }}
