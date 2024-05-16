@@ -4,6 +4,7 @@ import {
   createSlice,
   createAsyncThunk,
 } from "@reduxjs/toolkit";
+import { useEffect, useRef, useState } from "react";
 
 const updateStateAndFetchNewShippingCost = createAsyncThunk(
   "shippingLabels/fetchShippingCost",
@@ -11,16 +12,15 @@ const updateStateAndFetchNewShippingCost = createAsyncThunk(
     dispatch(action);
 
     const { weight } = getState() as State;
-    console.log(getState());
     const result = await fetch(
       `https://jsonplaceholder.typicode.com/photos/${weight}`,
       {
         signal,
-      },
+      }
     ).then((response) => response.json());
 
     return result.id as number;
-  },
+  }
 ) as any;
 
 type State = {
@@ -55,7 +55,7 @@ const shippingLabelsSlice = createSlice({
       (state, action) => {
         state.shippingCost = action.payload;
         state.loadShippingCost = false;
-      },
+      }
     );
   },
 });
@@ -74,9 +74,40 @@ export function AppWithRedux() {
   );
 }
 
+const useDispatchWithAutoPromiseAbort = () => {
+  const [promise, setPromise] = useState<any>();
+  const originalDispatch = useDispatch();
+
+  useEffect(() => {
+    return () => {
+      if (promise) {
+        promise.abort();
+      }
+    };
+  });
+
+  const dispatch = (arg: any) => {
+    setPromise(originalDispatch(arg));
+  };
+
+  return dispatch;
+};
+
 function App() {
+  const [currentFetchShippingPromise, setCurrentFetchShippingPromise] =
+    useState<any>();
   const currentState = useSelector((state) => state) as State;
   const dispatch = useDispatch();
+
+  // const dispatch = useDispatchWithAutoPromiseAbort();
+
+  useEffect(() => {
+    return () => {
+      if (currentFetchShippingPromise) {
+        currentFetchShippingPromise.abort();
+      }
+    };
+  }, [currentFetchShippingPromise]);
 
   return (
     <>
@@ -88,10 +119,12 @@ function App() {
           type="text"
           value={currentState.message}
           onChange={(e) => {
-            dispatch(
-              updateStateAndFetchNewShippingCost(
-                dispatch(setMessage({ message: e.target.value })),
-              ),
+            setCurrentFetchShippingPromise(
+              dispatch(
+                updateStateAndFetchNewShippingCost(
+                  dispatch(setMessage({ message: e.target.value }))
+                )
+              )
             );
           }}
         />
@@ -101,13 +134,15 @@ function App() {
         <input
           type="number"
           value={currentState.weight}
-          onChange={(e) =>
-            dispatch(
-              updateStateAndFetchNewShippingCost(
-                setWeight({ weight: Number(e.target.value) }),
-              ),
-            )
-          }
+          onChange={(e) => {
+            setCurrentFetchShippingPromise(
+              dispatch(
+                updateStateAndFetchNewShippingCost(
+                  setWeight({ weight: Number(e.target.value) })
+                )
+              )
+            );
+          }}
         />
       </label>
       <p>Shipping cost: {currentState.shippingCost} 💵</p>

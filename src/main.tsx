@@ -35,7 +35,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      { index: true, element: <AppWithStore /> },
+      { index: true, element: <AppWithRedux /> },
       { path: "app-with-redux", element: <AppWithRedux /> },
       { path: "app-with-store", element: <AppWithStore /> },
       { path: "app-without-store", element: <AppWithoutStore /> },
@@ -50,5 +50,5 @@ if (import.meta.hot) {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>,
+  </React.StrictMode>
 );
