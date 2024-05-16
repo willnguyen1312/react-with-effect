@@ -4,7 +4,7 @@ import {
   createSlice,
   createAsyncThunk,
 } from "@reduxjs/toolkit";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const updateStateAndFetchNewShippingCost = createAsyncThunk(
   "shippingLabels/fetchShippingCost",
@@ -80,11 +80,10 @@ const useDispatchWithAutoPromiseAbort = () => {
 
   useEffect(() => {
     return () => {
-      if (promise) {
-        promise.abort();
-      }
+      console.log("Aborting promise");
+      promise?.abort();
     };
-  });
+  }, [promise]);
 
   const dispatch = (arg: any) => {
     setPromise(originalDispatch(arg));
@@ -94,24 +93,12 @@ const useDispatchWithAutoPromiseAbort = () => {
 };
 
 function App() {
-  const [currentFetchShippingPromise, setCurrentFetchShippingPromise] =
-    useState<any>();
   const currentState = useSelector((state) => state) as State;
-  const dispatch = useDispatch();
-
-  // const dispatch = useDispatchWithAutoPromiseAbort();
-
-  useEffect(() => {
-    return () => {
-      if (currentFetchShippingPromise) {
-        currentFetchShippingPromise.abort();
-      }
-    };
-  }, [currentFetchShippingPromise]);
+  const dispatch = useDispatchWithAutoPromiseAbort();
 
   return (
     <>
-      <h1>App built with useReducer and useEffect 🤘</h1>
+      <h1>App built with Redux Toolkit 🤘</h1>
       <h2>Please enter weight and I will give ya a shipping cost 😊</h2>
       <label htmlFor="message">
         Message:{" "}
@@ -119,11 +106,9 @@ function App() {
           type="text"
           value={currentState.message}
           onChange={(e) => {
-            setCurrentFetchShippingPromise(
-              dispatch(
-                updateStateAndFetchNewShippingCost(
-                  dispatch(setMessage({ message: e.target.value }))
-                )
+            dispatch(
+              updateStateAndFetchNewShippingCost(
+                setMessage({ message: e.target.value })
               )
             );
           }}
@@ -135,11 +120,9 @@ function App() {
           type="number"
           value={currentState.weight}
           onChange={(e) => {
-            setCurrentFetchShippingPromise(
-              dispatch(
-                updateStateAndFetchNewShippingCost(
-                  setWeight({ weight: Number(e.target.value) })
-                )
+            dispatch(
+              updateStateAndFetchNewShippingCost(
+                setWeight({ weight: Number(e.target.value) })
               )
             );
           }}
