@@ -17,19 +17,22 @@ const updateStateAndFetchNewShippingCost = createAsyncThunk(
       clearTimeout(id);
     });
 
-    return await new Promise((resolve) => {
-      id = setTimeout(async () => {
-        const { weight } = getState() as State;
-        fetch(`https://jsonplaceholder.typicode.com/photos/${weight}`, {
-          signal,
-        })
-          .then((response) => response.json())
-          .then((data) => resolve(data.id as any))
-          .catch(() => {
-            // Ignore errors for now since it's just a intentional request cancelation 😄
-          });
-      }, action.payload.debouncedTime);
-    });
+    // @ts-ignore
+    const { promise, resolve } = Promise.withResolvers();
+    const { weight } = getState() as State;
+
+    id = setTimeout(() => {
+      fetch(`https://jsonplaceholder.typicode.com/photos/${weight}`, {
+        signal,
+      })
+        .then((response) => response.json())
+        .then((data) => resolve(data.id as any))
+        .catch(() => {
+          // Ignore errors for now since it's just a intentional request cancelation 😄
+        });
+    }, action.payload.debouncedTime);
+
+    return await promise;
   }
 ) as any;
 
