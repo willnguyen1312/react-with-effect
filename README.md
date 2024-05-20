@@ -6,3 +6,5 @@
 2. David Khourshid - https://github.com/davidkpiano/useEffectReducer
 3. Sophie Alpert - https://gist.github.com/sophiebits/145c47544430c82abd617c9cdebefee8
 4. Reducer pattern from react's devtool repo - https://github.com/facebook/react/blob/9d76c954cfe134d7f541c3e706e344e6845ba235/packages/react-devtools-shared/src/devtools/views/Components/TreeContext.js#L871-L874
+
+## Demo - https://react-with-effect.netlify.app 🙂‍↔️
