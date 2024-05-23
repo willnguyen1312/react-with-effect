@@ -6,10 +6,8 @@ import {
   Outlet,
   Link,
 } from "react-router-dom";
-import { AppWithStore } from "./AppWithStore";
-import { AppWithoutStore } from "./AppWithoutStore";
+
 import "./index.css";
-import { AppWithRedux } from "./AppWithRedux";
 
 const Layout = () => (
   <main>
@@ -35,10 +33,54 @@ const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      { index: true, element: <AppWithRedux /> },
-      { path: "app-with-redux", element: <AppWithRedux /> },
-      { path: "app-with-store", element: <AppWithStore /> },
-      { path: "app-without-store", element: <AppWithoutStore /> },
+      {
+        index: true,
+        loader: () => {
+          return null;
+        },
+        lazy: async () => {
+          const { default: Component } = await import("./AppWithRedux");
+          return {
+            Component,
+          };
+        },
+      },
+      {
+        path: "app-with-redux",
+        loader: () => {
+          return null;
+        },
+        lazy: async () => {
+          const { default: Component } = await import("./AppWithRedux");
+          return {
+            Component,
+          };
+        },
+      },
+      {
+        path: "app-with-store",
+        loader: () => {
+          return null;
+        },
+        lazy: async () => {
+          const { default: Component } = await import("./AppWithStore");
+          return {
+            Component,
+          };
+        },
+      },
+      {
+        path: "app-without-store",
+        loader: () => {
+          return null;
+        },
+        lazy: async () => {
+          const { default: Component } = await import("./AppWithoutStore");
+          return {
+            Component,
+          };
+        },
+      },
     ],
   },
 ]);

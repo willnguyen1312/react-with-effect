@@ -79,7 +79,7 @@ const store = configureStore({
   reducer: shippingLabelsSlice.reducer,
 });
 
-export function AppWithRedux() {
+export default function AppWithRedux() {
   return (
     <Provider store={store}>
       <App />

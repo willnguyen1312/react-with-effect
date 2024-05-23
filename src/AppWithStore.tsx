@@ -30,7 +30,7 @@ const createShippingEffect =
   (
     dispatch: ReturnType<typeof createStore>["dispatch"],
     weight: number,
-    debouncedTime = 0,
+    debouncedTime = 0
   ) =>
   () => {
     let cancelFetchShippingCost: () => void = () => {};
@@ -53,7 +53,7 @@ const createShippingEffect =
 const reducer = (
   state: State,
   action: Action,
-  dispatch: ReturnType<typeof createStore>["dispatch"],
+  dispatch: ReturnType<typeof createStore>["dispatch"]
 ): State => {
   if (action.type === "setWeight") {
     return {
@@ -63,7 +63,7 @@ const reducer = (
       shippingEffect: createShippingEffect(
         dispatch,
         action.weight,
-        action.debouncedTime,
+        action.debouncedTime
       ),
     };
   }
@@ -85,7 +85,7 @@ const reducer = (
       shippingEffect: createShippingEffect(
         dispatch,
         state.weight,
-        action.debouncedTime,
+        action.debouncedTime
       ),
     };
   }
@@ -137,7 +137,7 @@ const createStore = () => {
   };
 };
 
-export function AppWithStore() {
+export default function AppWithStore() {
   const storeRef = useRef<ReturnType<typeof createStore>>();
 
   if (!storeRef.current) {
@@ -146,7 +146,7 @@ export function AppWithStore() {
 
   const currentState = useSyncExternalStore(
     storeRef.current.subscribe,
-    storeRef.current.getState,
+    storeRef.current.getState
   );
 
   useEffect(() => {

@@ -28,7 +28,7 @@ type Action =
 const runShippingEffect = (
   dispatch: Dispatch<Action>,
   weight: number,
-  debouncedTime = 0,
+  debouncedTime = 0
 ) => {
   let cancelFetchShippingCost: () => void = () => {};
 
@@ -47,7 +47,7 @@ const runShippingEffect = (
   };
 };
 
-export function AppWithoutStore() {
+export default function AppWithoutStore() {
   const [currentState, dispatch] = useReducer(
     (state: State, action: Action): State => {
       if (action.type === "setWeight") {
@@ -89,7 +89,7 @@ export function AppWithoutStore() {
       weight: 0,
       shippingCost: 0,
       loadShippingCost: false,
-    },
+    }
   );
 
   useEffect(() => {
