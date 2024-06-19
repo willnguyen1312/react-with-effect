@@ -33,7 +33,7 @@ const updateStateAndFetchNewShippingCost = createAsyncThunk(
     }, action.payload.debouncedTime);
 
     return await promise;
-  }
+  },
 ) as any;
 
 type State = {
@@ -68,7 +68,7 @@ const shippingLabelsSlice = createSlice({
       (state, action) => {
         state.shippingCost = action.payload;
         state.loadShippingCost = false;
-      }
+      },
     );
   },
 });
@@ -120,8 +120,8 @@ function App() {
           onChange={(e) => {
             dispatch(
               updateStateAndFetchNewShippingCost(
-                setMessage({ message: e.target.value, debouncedTime: 5000 })
-              )
+                setMessage({ message: e.target.value, debouncedTime: 5000 }),
+              ),
             );
           }}
         />
@@ -137,8 +137,8 @@ function App() {
                 setWeight({
                   weight: Number(e.target.value),
                   debouncedTime: 2000,
-                })
-              )
+                }),
+              ),
             );
           }}
         />
